@@ -6,8 +6,8 @@
 # ==============================================================================
 
 import grpc
-import riva_api.riva_audio_pb2 as ra
-import riva_api.riva_tts_pb2 as rtts
+import riva_api.riva_audio_pb2 as ra  # Riva Audio
+import riva_api.riva_tts_pb2 as rtts   
 import riva_api.riva_tts_pb2_grpc as rtts_srv
 from six.moves import queue
 from config import riva_config, tts_config
@@ -15,7 +15,7 @@ import numpy as np
 import time
 
 # Default ASR parameters - Used in case config values not specified in the config.py file
-VERBOSE = False
+VERBOSE = False  
 SAMPLE_RATE = 22050
 LANGUAGE_CODE = "en-US"
 VOICE_NAME = "English-US-Female-1"
@@ -25,27 +25,27 @@ class TTSPipe(object):
     from text in batch mode."""
 
     def __init__(self):
-        self.verbose = tts_config["VERBOSE"] if "VERBOSE" in tts_config else VERBOSE
-        self.sample_rate = tts_config["SAMPLE_RATE"] if "SAMPLE_RATE" in tts_config else SAMPLE_RATE
-        self.language_code = tts_config["LANGUAGE_CODE"] if "LANGUAGE_CODE" in tts_config else LANGUAGE_CODE
-        self.voice_name = tts_config["VOICE_NAME"] if "VOICE_NAME" in tts_config else VOICE_NAME
-        self.audio_encoding = ra.AudioEncoding.LINEAR_PCM
-        self._buff = queue.Queue()
-        self.closed = False
+        self.verbose = tts_config["VERBOSE"] if "VERBOSE" in tts_config else VERBOSE  # To print out debug messages
+        self.sample_rate = tts_config["SAMPLE_RATE"] if "SAMPLE_RATE" in tts_config else SAMPLE_RATE  # Sample rate of audio
+        self.language_code = tts_config["LANGUAGE_CODE"] if "LANGUAGE_CODE" in tts_config else LANGUAGE_CODE   # Language code
+        self.voice_name = tts_config["VOICE_NAME"] if "VOICE_NAME" in tts_config else VOICE_NAME  # Voice name
+        self.audio_encoding = ra.AudioEncoding.LINEAR_PCM  # Audio encoding
+        self._buff = queue.Queue()  # To collect text responses from the state machine output, into a buffer.
+        self.closed = False  # To check if the channel is closed
         self._flusher = bytes(np.zeros(dtype=np.int16, shape=(self.sample_rate, 1)))  # Silence audio
-        self.current_tts_duration = 0
+        self.current_tts_duration = 0  # To store the duration of the current TTS audio
 
-    def start(self):
-        if self.verbose:
-            print('[Riva TTS] Creating Stream TTS channel: {}'.format(riva_config["RIVA_SPEECH_API_URL"]))
-        self.channel = grpc.insecure_channel(riva_config["RIVA_SPEECH_API_URL"])
-        self.tts_client = rtts_srv.RivaSpeechSynthesisStub(self.channel)
+    def start(self):  # To create a gRPC channel to Riva TTS
+        if self.verbose:  # To print out debug messages
+            print('[Riva TTS] Creating Stream TTS channel: {}'.format(riva_config["RIVA_SPEECH_API_URL"]))    
+        self.channel = grpc.insecure_channel(riva_config["RIVA_SPEECH_API_URL"])  # Create a gRPC channel
+        self.tts_client = rtts_srv.RivaSpeechSynthesisStub(self.channel)  # Create a gRPC stub
         
-    def reset_current_tts_duration(self):
-        self.current_tts_duration = 0
+    def reset_current_tts_duration(self):  
+        self.current_tts_duration = 0  # To reset the duration of the current TTS audio
         
     def get_current_tts_duration(self):
-        return self.current_tts_duration
+        return self.current_tts_duration  # To get the duration of the current TTS audio
 
     def fill_buffer(self, in_data):
         """To collect text responses from the state machine output, into a buffer."""
